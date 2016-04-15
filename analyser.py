@@ -86,6 +86,35 @@ def import_submissions(course_id = "C00198", dbname="test1"):
 	subs = submissions[submissions.problem_id.isin(lprobs)]
 	return subs
 
+def import_all_submissions(dbname="test1"):
+	con = psycopg2.connect("dbname=%s"%dbname)
+	# subs = generate_submissions(users=10, pbls=100)
+	users = pd.read_sql_query("select user_id, creation_date from users \
+	                            where demo=0 and instructor=0 and administrator=0\
+	                            ",con=con)
+
+	lusers = users.user_id.tolist()
+	usersstr = str(lusers).strip('[]')
+
+	probs = pd.read_sql_query("select problem_nm from problems where problem_id like 'P%%'\
+	                          ",con=con)
+
+	#problem_id like 'P%%'
+
+	lprobs = [p[0] for p in probs.values if p[0]]
+	lprobsstr = str(lprobs).strip('[]')
+
+	submissions = pd.read_sql_query("select submission_uid, user_id, problem_id, submission_id, \
+	                        state, time_out, time_in, veredict, score \
+	                        from submissions where user_id in (%s);" % (usersstr) ,
+	                       con=con)
+
+	submissions.problem_id = submissions.problem_id.apply(lambda x: x[:-3])
+	#submissions.set_index('submission_uid', inplace=True)
+
+	subs = submissions[submissions.problem_id.isin(lprobs)]
+	return subs
+
 def magnitude(v):
 	'''
 	return the magnitude of a list of values
