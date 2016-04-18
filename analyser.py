@@ -304,7 +304,7 @@ def cmpVect(v1, v2):
     return(magnitude(D.apply(abs)))
 
 
-def process(s, meth='svd', kind="bin", vert_name="diff", hor_name="abil", itercnt=5):
+def process(s, meth='svd', kind="bin", vert_name="diff", hor_name="abil", itercnt=5, verbose=True):
 
         # get matrixs
     start = timer()
@@ -346,10 +346,11 @@ def process(s, meth='svd', kind="bin", vert_name="diff", hor_name="abil", itercn
                                  (hor.name[:-1], i), Horiz=True)
 
     end = timer()
-    print ("Proceed in %.3f seconds" % (end - start))
-    print ("Using the %s method" % meth)
-    print ("Based on the %s matrix" % kind)
-    print ("For %d users ans %d problems" % (len(mat.index), len(mat.columns)))
-
+    if verbose:
+	    print ("Proceed in %.3f seconds" % (end - start))
+	    print ("Using the %s method" % meth)
+	    print ("Based on the %s matrix" % kind)
+	    print ("For %d users and %d problems" % (len(mat.columns), len(mat.index)))
+	    print ""
 
     return (mat, vert, hor)
