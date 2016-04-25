@@ -103,7 +103,7 @@ def import_all_submissions(dbname="test1"):
     lusers = users.user_id.tolist()
     usersstr = str(lusers).strip('[]')
 
-    probs = pd.read_sql_query("select problem_nm from problems where problem_id like 'P%%'\
+    probs = pd.read_sql_query("select problem_nm from abstractproblems where problem_nm like 'P%%'\
 	                          ", con=con)
 
     # problem_id like 'P%%'
