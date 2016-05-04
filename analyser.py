@@ -59,35 +59,36 @@ def import_submissions(course_id="C00198", dbname="test1"):
     # subs = generate_submissions(users=10, pbls=100)
 
     userslist = pd.read_sql_query(
-        "select user_id from coursesusers where course_id like '%s';" % course_id, con=con)
+        "select user_id from coursesusers where course_id like '%s';" %
+        course_id, con=con)
     userslist = [u[0] for u in userslist.values if u[0]]
     usersstr = str(userslist).strip('[]')
 
     users = pd.read_sql_query("select user_id, creation_date from users \
-	                            where demo=0 and instructor=0 and administrator=0\
-	                            and user_id in (%s);" % usersstr, con=con)
+                            where demo=0 and instructor=0 and administrator=0\
+                            and user_id in (%s);" % usersstr, con=con)
 
     lusers = users.user_id.tolist()
     usersstr = str(lusers).strip('[]')
 
-    problists = pd.read_sql_query(
-        "select list_id from courseslists where course_id like '%s';" % course_id, con=con)
+    problists = pd.read_sql_query("select list_id from courseslists \
+        where course_id like '%s';" % course_id, con=con)
     problists = [l[0] for l in problists.values if l[0]]
     problistsstr = str(problists).strip('[]')
 
     probs = pd.read_sql_query("select problem_nm from listitems where list_id \
-	                                in(%s);" % problistsstr, con=con)
+                                    in(%s);" % problistsstr, con=con)
 
     lprobs = [p[0] for p in probs.values if p[0]]
     lprobsstr = str(lprobs).strip('[]')
 
     submissions = pd.read_sql_query("select submission_uid, user_id, problem_id, submission_id, \
-	                        state, time_out, time_in, veredict, score \
-	                        from submissions where user_id in (%s);" % (usersstr),
+                            state, time_out, time_in, veredict, score \
+                            from submissions where user_id in (%s);" % (usersstr),
                                     con=con)
 
     submissions.problem_id = submissions.problem_id.apply(lambda x: x[:-3])
-    #submissions.set_index('submission_uid', inplace=True)
+    # submissions.set_index('submission_uid', inplace=True)
 
     subs = submissions[submissions.problem_id.isin(lprobs)]
     return subs
@@ -97,14 +98,14 @@ def import_all_submissions(dbname="test1"):
     con = psycopg2.connect("dbname=%s" % dbname)
     # subs = generate_submissions(users=10, pbls=100)
     users = pd.read_sql_query("select user_id, creation_date from users \
-	                            where demo=0 and instructor=0 and administrator=0\
-	                            ", con=con)
+                        where demo=0 and instructor=0 and administrator=0\
+                                ", con=con)
 
     lusers = users.user_id.tolist()
     usersstr = str(lusers).strip('[]')
 
     probs = pd.read_sql_query("select problem_nm from abstractproblems where problem_nm like 'P%%'\
-	                          ", con=con)
+                              ", con=con)
 
     # problem_id like 'P%%'
 
@@ -112,8 +113,8 @@ def import_all_submissions(dbname="test1"):
     lprobsstr = str(lprobs).strip('[]')
 
     submissions = pd.read_sql_query("select submission_uid, user_id, problem_id, submission_id, \
-	                        state, time_out, time_in, veredict, score \
-	                        from submissions where user_id in (%s);" % (usersstr),
+                            state, time_out, time_in, veredict, score \
+                            from submissions where user_id in (%s);" % (usersstr),
                                     con=con)
 
     # get rid of languages
@@ -347,10 +348,10 @@ def process(s, meth='svd', kind="bin", vert_name="diff", hor_name="abil", itercn
 
     end = timer()
     if verbose:
-	    print ("Proceed in %.3f seconds" % (end - start))
-	    print ("Using the %s method" % meth)
-	    print ("Based on the %s matrix" % kind)
-	    print ("For %d users and %d problems" % (len(mat.columns), len(mat.index)))
-	    print ""
+        print ("Proceed in %.3f seconds" % (end - start))
+        print ("Using the %s method" % meth)
+        print ("Based on the %s matrix" % kind)
+        print ("For %d users and %d problems" % (len(mat.columns), len(mat.index)))
+        print ""
 
     return (mat, vert, hor)

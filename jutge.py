@@ -1,3 +1,4 @@
+#!/usr/bin/python
 """
 This file contain basics operations to manipulate data
 from the Jutge.org database
@@ -121,7 +122,7 @@ def select_pbls(con, ids_list=True, course_id=None, list_id=None, ptype="%P%"):
     return probs
 
 
-def select_submisions(con, lusr=None, lpbl=None, course_id=None):
+def select_submissions(con, lusr=None, lpbl=None, course_id=None):
     """"
     Return a subset of submission as a pandas dataframe
     regarding to :

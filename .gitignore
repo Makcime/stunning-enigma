@@ -2,3 +2,4 @@
 *pyc
 *.~lock*
 *tar.gz
+csv/*
