@@ -12,13 +12,13 @@ start = timer()
 d1 = start
 
 # Select every users from the db as a python pandas dataframe
-# everyusers = select_users(con, ids_list=True)
-everyusers = select_users(con, course_id="C00198")
+everyusers = select_users(con, ids_list=True)
+# everyusers = select_users(con, course_id="C00198")
 print len(everyusers), "\tusers selected"
 
 # Select every pbls from the db as a python pandas dataframe
-# everypbls = select_pbls(con, ids_list=True)
-everypbls = select_pbls(con, course_id="C00198", )
+everypbls = select_pbls(con, ids_list=True)
+# everypbls = select_pbls(con, course_id="C00198", )
 print len(everypbls), "\tproblems selected"
 
 subs = select_submissions(con, lusr=everyusers, lpbl=everypbls)

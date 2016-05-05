@@ -3,3 +3,4 @@
 *.~lock*
 *tar.gz
 csv/*
+*.pdf

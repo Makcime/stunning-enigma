@@ -130,53 +130,58 @@ def linear1(row, vector):
     return (row[1] * vector).sum() / len(row[1])
 
 
-def process(usrs, pbls, meth='svd', src="csv/bin.csv", vert_name="diff", hor_name="abil", itercnt=5, verbose=True):
+def process(usrs, pbls, meth='svd', src="csv/bin.csv", vert_name="diff",
+            hor_name="abil", itercnt=5, verbose=True):
 
         # get matrixs
     start = timer()
-    mat = pd.read_csv(src, index_col=0, sep=";")
+    mat = pd.read_csv(src, index_col=0, sep=";", decimal=",", verbose=False)
     # mat = mat.applymap(lambda x: float(x.replace(',', '.')))
     # print mat.describe()
+    # print mat[[0]].sum()
+    mat = mat.T[pbls]
+    mat = mat.T[usrs]
+    # print mat
 
+    # vectors initialisation
+    vert = pd.Series([1.0 for i in range(len(mat.index))],
+                     index=mat.index, name=vert_name + '_0')
+    normalize(vert)
+    hor = pd.Series([1.0 for i in range(len(mat.columns))],
+                    index=mat.columns, name=hor_name + '_0')
+    normalize(hor)
 
+    if meth == 'svd':
+        npmat = mat.as_matrix()
+        # compute scd
+        U, s, V = np.linalg.svd(npmat, full_matrices=False)
 
-    # # vectors initialisation
-    # vert = pd.Series([1.0 for i in range(len(mat.index))],
-    #                  index=mat.index, name=vert_name + '_0')
-    # normalize(vert)
-    # hor = pd.Series([1.0 for i in range(len(mat.columns))],
-    #                 index=mat.columns, name=hor_name + '_0')
-    # normalize(hor)
+        # get vertical evaluation (probls difficulties)
+        U = pd.DataFrame(U, index=mat.index)
+        vert = pd.Series(U[0], index=mat.index, name=vert_name)
+        vert = vert.apply(abs)
 
-    # if meth == 'svd':
-    #     npmat = mat.as_matrix()
-    #     # compute scd
-    #     U, s, V = np.linalg.svd(npmat, full_matrices=False)
+        # get horizontal evaluation (users abilities)
+        hor = pd.Series(V[0], index=mat.columns, name=hor_name)
+        hor = hor.apply(abs)
 
-    #     # get vertical evaluation (probls difficulties)
-    #     U = pd.DataFrame(U, index=mat.index)
-    #     vert = pd.Series(U[0], index=mat.index, name=vert_name)
-    #     vert = vert.apply(abs)
+    elif meth == 'lin':
+        for i in range(0, itercnt):
+            vert = process_matrix(
+                mat, hor, f=linear1, name="%s%d" % (vert.name[:-1], i))
+            hor = process_matrix(mat, vert, name="%s%d" %
+                                 (hor.name[:-1], i), Horiz=True)
 
-    #     # get horizontal evaluation (users abilities)
-    #     hor = pd.Series(V[0], index=mat.columns, name=hor_name)
-    #     hor = hor.apply(abs)
+    end = timer()
+    if verbose:
+        print ("Proceed in %.3f seconds" % (end - start))
+        print ("Using the %s method" % meth)
+        print ("Based on the matrix %s : " % src)
+        print ("For %d users and %d problems" %
+               (len(mat.columns), len(mat.index)))
+        print ""
 
-    # elif meth == 'lin':
-    #     for i in range(0, itercnt):
-    #         vert = process_matrix(
-    #             mat, hor, f=linear1, name="%s%d" % (vert.name[:-1], i))
-    #         hor = process_matrix(mat, vert, name="%s%d" %
-    #                              (hor.name[:-1], i), Horiz=True)
+    # return (mat, )
+    return (mat, vert, hor)
 
-    # end = timer()
-    # if verbose:
-    #     print ("Proceed in %.3f seconds" % (end - start))
-    #     print ("Using the %s method" % meth)
-    #     print ("Based on the %s matrix" % kind)
-    #     print ("For %d users and %d problems" %
-    #            (len(mat.columns), len(mat.index)))
-    #     print ""
-
-    # return (mat, vert, hor)
-    return (mat)
+    
