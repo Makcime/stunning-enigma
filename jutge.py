@@ -58,8 +58,9 @@ def select_users(con, ids_list=True, course_id=None, d1=None, d2=None):
             "select user_id from coursesusers\
             where course_id like '%s';" % course_id, con=con)
         userslist = [u[0] for u in userslist.values if u[0]]
-        usersstr = str(userslist).strip('[]')
-        req += " and user_id in (%s);" % usersstr
+        if len(userslist):
+            usersstr = str(userslist).strip('[]')
+            req += " and user_id in (%s);" % usersstr
 
     if d1:
         pass
@@ -71,6 +72,20 @@ def select_users(con, ids_list=True, course_id=None, d1=None, d2=None):
     if ids_list:
         users = users.user_id.tolist()
         # usersstr = str(lusers).strip('[]')
+
+    return users
+
+
+def get_good_users(con, ids_list=True):
+    """
+
+    """
+    req = "select user_id from users \
+            where demo=0 and instructor=0 and administrator=0"
+
+    users = pd.read_sql_query(req, con=con)
+    if ids_list:
+        users = users.user_id.tolist()
 
     return users
 
@@ -106,16 +121,19 @@ def select_pbls(con, ids_list=True, course_id=None, list_id=None, ptype="%P%"):
             "select list_id from courseslists \
             where course_id like '%s';" % course_id, con=con)
         problists = [l[0] for l in problists.values if l[0]]
-        problistsstr = str(problists).strip('[]')
-        probs = pd.read_sql_query("select problem_nm from listitems \
-            where list_id in(%s) and problem_nm like '%s';"
-                                  % (problistsstr, ptype), con=con)
+        if len(problists):
+            problistsstr = str(problists).strip('[]')
+            probs = pd.read_sql_query("select problem_nm from listitems \
+                where list_id in(%s) and problem_nm like '%s';"
+                                      % (problistsstr, ptype), con=con)
+        else:
+            probs = pd.DataFrame(columns=['problem_nm'])
 
     else:
         probs = pd.read_sql_query("select problem_nm from abstractproblems \
             where problem_nm like '%s';" % ptype, con=con)
 
-    # users = pd.read_sql_query(req, con=con)
+    probs.drop_duplicates(subset='problem_nm')
     if ids_list:
         probs = probs.problem_nm.tolist()
 
@@ -152,3 +170,36 @@ def select_submissions(con, lusr=None, lpbl=None, course_id=None):
     subs = submissions[submissions.problem_id.isin(lpbl)]
     subs.reset_index(inplace=True)
     return subs
+
+
+def get_courses(con, filtered=True):
+    df = pd.read_sql_query("select course_id, title from courses;", con=con)
+    kw = df.title.apply(lambda x: x.split()[0])
+    kw.name = "kw"
+    df = df.join(kw)
+
+    cusers = pd.read_sql_query("select user_id, course_id from coursesusers \
+        where course_id in(%s);" % str(df.course_id.tolist()).strip('[]'),
+                               con=con)
+
+    # usrcnt = cusers[cusers.user_id != None].course_id.value_counts()
+    cusers = cusers.drop_duplicates()
+    cusers = cusers.dropna()
+    cusers = cusers[cusers.user_id.isin(get_good_users(con))]
+    usrcnt = cusers.course_id.value_counts()
+    usrcnt.name = 'usrcnt'
+    print usrcnt.describe()
+
+    df.set_index(df.course_id, inplace=True)
+
+    pblcnt = pd.Series(name='pblcnt')
+    for c in df.course_id:
+        pblcnt[c] = len(select_pbls(con, course_id=c))
+
+    df = df.join(pblcnt)
+    df.pblcnt = df.pblcnt.fillna(0)
+    
+    df = df.join(usrcnt)
+    df.usrcnt = df.usrcnt.fillna(0)
+    # kw_vc = df.kw.value_counts()
+    return df

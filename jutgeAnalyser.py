@@ -142,6 +142,7 @@ def process(usrs, pbls, meth='svd', src="csv/bin.csv", vert_name="diff",
     mat = mat.T[pbls]
     mat = mat.T[usrs]
     # print mat
+    # mat.apply()
 
     # vectors initialisation
     vert = pd.Series([1.0 for i in range(len(mat.index))],
@@ -159,18 +160,23 @@ def process(usrs, pbls, meth='svd', src="csv/bin.csv", vert_name="diff",
         # get vertical evaluation (probls difficulties)
         U = pd.DataFrame(U, index=mat.index)
         vert = pd.Series(U[0], index=mat.index, name=vert_name)
-        vert = vert.apply(abs)
+        # vert = vert.apply(abs)
+        # get rid of unactive problems
+        # vert = vert[vert > 0]
 
         # get horizontal evaluation (users abilities)
         hor = pd.Series(V[0], index=mat.columns, name=hor_name)
-        hor = hor.apply(abs)
+        # hor = hor.apply(abs)
+        # get rid of un active users
+        # hor = hor[hor > 0]
 
     elif meth == 'lin':
         for i in range(0, itercnt):
             vert = process_matrix(
-                mat, hor, f=linear1, name="%s%d" % (vert.name[:-1], i))
+                mat, hor, f=linear2, name="%s%d" % (vert.name[:-1], i))
             hor = process_matrix(mat, vert, name="%s%d" %
                                  (hor.name[:-1], i), Horiz=True)
+
 
     end = timer()
     if verbose:
